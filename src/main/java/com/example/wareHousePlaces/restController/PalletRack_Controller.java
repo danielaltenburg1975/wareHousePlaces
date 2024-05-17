@@ -75,26 +75,39 @@ public class PalletRack_Controller {
         }
     }
 
-
-
+    /**
+     * Searches for the best storage place for a product based on various criteria.
+     *
+     * This method takes a request containing the article number, quantity, storage aids,
+     * and the height of the product. It calculates the total weight of the product
+     * and then searches for the best storage place in the warehouse.
+     *
+     * @param placeSearchRequest The request data containing article number, quantity, storage aids, and height.
+     * @return A ResponseEntity with the search results, including the best storage place and a message.
+     */
     @PostMapping("/searchPlace")
     public ResponseEntity<SearchResultRequest> searchPlace(@RequestBody PlaceSearchRequest placeSearchRequest) {
 
+
         WeightService weightService = new WeightService(articleRepository, storageAidsRepository);
+        // Set the total weight based on article number, quantity, and storage aids
         weightService.setTotalWeight(placeSearchRequest.getArticleNumber(), placeSearchRequest.getQuantity(),
                 placeSearchRequest.getStorageAids());
 
         StoragePlaceService storagePlaceService = new StoragePlaceService(palletRackRepository, abcCriteriaRepository,
                  storagePropertyRepository, articleRepository);
+        // Search for the best storage place based on weight, article number, and height
         storagePlaceService.searchBestPlace(weightService.getTotalWeight(), placeSearchRequest.getArticleNumber(),
                                             placeSearchRequest.getHeight());
 
+        // Retrieve the best found storage place
         PalletRack_Data bestPlaces = storagePlaceService.getBestPlace();
+        // Retrieve the associated message (if any)
         String message = storagePlaceService.getPlaceMessage();
-
+        // Create a SearchResultRequest object with the search results and message
         SearchResultRequest searchResult = new SearchResultRequest(bestPlaces, message);
 
-
+        // Return the search results as a ResponseEntity
         return ResponseEntity.ok().body(searchResult);
     }
 
